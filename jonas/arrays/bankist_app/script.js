@@ -61,9 +61,12 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMomvements = function (movements) {
+const displayMomvements = function (movements, sorted = false) {
   containerMovements.innerHTML = '';
-  movements.forEach((mov, i) => {
+
+  let moves = sorted ? movements.slice().sort((a, b) => a - b) : movements;
+
+  moves.forEach((mov, i) => {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `
     <div class="movements__row">
@@ -74,7 +77,6 @@ const displayMomvements = function (movements) {
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
-displayMomvements(account1.movements);
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -129,8 +131,9 @@ const addUsernameToAccounts = accounts => {
 };
 addUsernameToAccounts(accounts);
 
-const calcPrintBalance = movements => {
-  const totalMovements = movements.reduce((acc, move) => acc + move, 0);
+const calcPrintBalance = account => {
+  const totalMovements = account.movements.reduce((acc, move) => acc + move, 0);
+  account.balance = totalMovements;
   labelBalance.textContent = `${totalMovements} EUR`;
 };
 
@@ -175,17 +178,73 @@ btnLogin.addEventListener('click', function (e) {
     inputLoginUsername.value = '';
     inputLoginPin.value = '';
     inputLoginPin.blur();
-    // labelDate.textContent = new Date().toLocaleDateString();
-    // labelBalance.textContent = `${currentAccount.movements[0]} EUR`;
-    // labelTimer.textContent = '00:00';
-    // Display movements
-    displayMomvements(currentAccount.movements);
-    // Display balance
-    calcPrintBalance(currentAccount.movements);
 
-    // Display Summary
-    calcDisplaySummary(currentAccount.movements, currentAccount.interestRate);
+    updateUI(currentAccount);
   }
+});
+
+function updateUI(currentAccount) {
+  displayMomvements(currentAccount.movements);
+  calcPrintBalance(currentAccount);
+  calcDisplaySummary(currentAccount.movements, currentAccount.interestRate);
+}
+
+// transfer account balance
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputTransferAmount.value);
+  const receiverAccount = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+
+  if (
+    amount > 0 &&
+    amount <= currentAccount.balance &&
+    receiverAccount?.username !== currentAccount.username
+  ) {
+    receiverAccount.movements.push(amount);
+    currentAccount.movements.push(-amount);
+
+    updateUI(currentAccount);
+  }
+});
+
+// close account
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const username = inputCloseUsername.value;
+  const pin = Number(inputClosePin.value);
+
+  const account = accounts.find(acc => acc.username === username);
+
+  if (account?.pin === pin) {
+    const accountIndex = accounts.findIndex(acc => acc.username === username);
+
+    if (accountIndex !== -1) {
+      accounts.splice(accountIndex, 1);
+      containerApp.style.opacity = 0;
+    }
+  }
+});
+
+// btn loan
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    currentAccount.movements.push(amount);
+    updateUI(currentAccount);
+  }
+});
+
+// btn sort
+let sorted = false;
+btnSort.addEventListener('click', () => {
+  displayMomvements(currentAccount.movements, !sorted);
+  sorted = !sorted;
 });
 
 // Filter out movements as deposits
@@ -233,5 +292,33 @@ const totalMovementsInUSD = movements
   .map(mov => mov * 1.1)
   .reduce((acc, curr) => acc + curr, 0);
 console.log(totalMovementsInUSD);
+
+// some and every array methods
+const numbers = [1, 2, 3, 4, 5];
+
+const isEvenPrsent = numbers.some(p => p % 2 === 0);
+console.log(isEvenPrsent);
+
+const areAllBiggerThanZero = numbers.every(p => p > 0);
+console.log(areAllBiggerThanZero);
+
+const simpleNestedArray = [1, 2, [3, 2, 1]];
+console.log(simpleNestedArray.flat()); //  it works
+
+const deeplyNestedArray = [1, 2, [1, 2, [3, 2, 1, [4, 5]]]];
+console.log(deeplyNestedArray.flat()); // it does not work
+// hence we have to manually provide the depth level
+console.log(deeplyNestedArray.flat(3)); // it works)
+
+// flatMap function
+const nestedNumbers = [
+  [1, 2, 3],
+  [3, 2, 1],
+];
+const res = nestedNumbers.flatMap(num => num);
+console.log(res);
+
+const numbersToBeSorted = [1, 8, 2, 3, 10, 11];
+console.log(numbersToBeSorted.sort((a, b) => -a + b));
 
 /////////////////////////////////////////////////
