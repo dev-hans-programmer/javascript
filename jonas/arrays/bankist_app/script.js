@@ -321,4 +321,12 @@ console.log(res);
 const numbersToBeSorted = [1, 8, 2, 3, 10, 11];
 console.log(numbersToBeSorted.sort((a, b) => -a + b));
 
+// creating different ways to create array
+console.log(new Array(10).fill(10).map(num => num * 2));
+const array2 = Array.from({ length: 4 }, () => 2);
+console.log(array2);
+// create an array of number of values based on an integer
+const integer = 10;
+const computedArray = Array.from({ length: integer }, (_, i) => i + 1);
+console.log(computedArray);
 /////////////////////////////////////////////////
