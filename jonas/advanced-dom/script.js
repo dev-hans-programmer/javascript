@@ -45,7 +45,7 @@ Hello there, this is a cookie
 
 // If we use different methods one after the other then it just overrides the previous one and only inserts once.
 // In order to insert multiple copies, we can use cloneNode method
-header.before(message.cloneNode(true));
+// header.before(message.cloneNode(true));
 
 //header.before(message); // adds as a sibling before the target element
 header.after(message); // add as a sibling after the target element
@@ -55,3 +55,29 @@ const closeBtn = document.querySelector('.btn--close-cookie');
 closeBtn.addEventListener('click', () => {
    message.remove();
 });
+
+// styles, attributes and classes
+message.style.backgroundColor = 'red';
+// To get all the computed styles we can get the below method
+console.log(getComputedStyle(message));
+
+message.style.height =
+   Number.parseFloat(getComputedStyle(message).height, 10) + 100 + 'px';
+
+// To change the root styles
+document.documentElement.style.setProperty('--color-primary', 'orangered');
+
+// Attributes
+const logo = document.querySelector('.nav__logo');
+console.log(logo.src);
+console.log(logo.getAttribute('alt'));
+logo.setAttribute('alt', 'Updated bankist Logo');
+
+// Special attribute
+console.log(logo.dataset.typeProp);
+
+// classes
+// logo.classList.add();
+// logo.classList.remove();
+// logo.classList.toggle();
+// logo.classList.contains();
