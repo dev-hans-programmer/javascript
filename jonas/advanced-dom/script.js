@@ -81,3 +81,50 @@ console.log(logo.dataset.typeProp);
 // logo.classList.remove();
 // logo.classList.toggle();
 // logo.classList.contains();
+
+const btnScrollTo = document.querySelector('.btn--scroll-to');
+const section1 = document.querySelector('#section--1');
+
+btnScrollTo.addEventListener('click', function (e) {
+   const s1coords = section1.getBoundingClientRect();
+   console.log(s1coords);
+   console.log(e.target.getBoundingClientRect());
+
+   // current scroll
+   console.log('Current scroll (X/Y)', window.scrollX, window.scrollY);
+
+   console.log(
+      'Height/width viewport',
+      document.documentElement.clientHeight,
+      document.documentElement.clientWidth
+   );
+
+   // scroll programmatically
+   // window.scrollTo(
+   //    s1coords.left + window.scrollX,
+   //    s1coords.top + window.scrollY
+   // );
+
+   // window.scroll({
+   //    left: s1coords.left + window.scrollX,
+   //    top: s1coords.top + window.scrollY,
+   //    behavior: 'smooth',
+   // });
+
+   section1.scrollIntoView({ behavior: 'smooth' });
+});
+
+const h1 = document.querySelector('h1');
+
+const alertH1 = function (e) {
+   console.group('HEy');
+   alert('You are showing the alert after mouse enter');
+};
+
+// h1.addEventListener('mouseenter', alertH1);
+
+// setTimeout(() => {
+//    h1.removeEventListener('mouseenter', alertH1);
+// }, 3000);
+
+// h1.onmouseenter = alertH1;
