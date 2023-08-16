@@ -13,8 +13,14 @@ const throttle = (func, timeout = 2000) => {
 
 const saveInput = (name) => console.log(name);
 
-const processChange = throttle(saveInput, 3000);
+const processChange = throttle(saveInput, 1000);
 
 processChange('hey');
 processChange('hey Hi');
 processChange('hey Hello');
+
+setTimeout(() => {
+   processChange('hey Hello2');
+   processChange('hey Hello3');
+   processChange('hey Hello4');
+}, 2000);
