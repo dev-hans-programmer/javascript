@@ -128,3 +128,181 @@ const alertH1 = function (e) {
 // }, 3000);
 
 // h1.onmouseenter = alertH1;
+
+// event capturing and bubbling
+document.querySelector('.nav__link').addEventListener('click', (e) => {
+   console.log('CLICKED', e.target);
+   // e.stopPropagation();
+});
+document.querySelector('.nav__links').addEventListener(
+   'click',
+   (e) => {
+      console.log('CONTAINER CLICKED', e.target);
+   },
+   true // enabling capturing phase
+);
+
+// DOM traversing
+const h1Element = document.querySelector('h1');
+
+// Going downwards: child
+console.log(h1Element.querySelector('.highlight'));
+console.log(h1.childNodes);
+console.log(h1.children);
+
+h1.firstElementChild.style.color = 'red';
+
+// Going upwards: parents
+console.log(h1.parentElement);
+console.log(h1.parentNode);
+
+h1.closest('heading'); // it is opposite of querySelector
+
+// Going sideways
+console.log(h1.previousElementSibling);
+console.log(h1.nextElementSibling);
+
+console.log(h1.previousSibling);
+console.log(h1.nextSibling);
+
+// // Tab component
+// const parent = document.querySelector('.operations');
+
+// function removeActiveClasses() {
+//    document.querySelectorAll('.operations__tab').forEach((e) => {
+//       e.classList.remove('operations__tab--active');
+//    });
+
+//    document.querySelectorAll('.operations__content').forEach((e) => {
+//       e.classList.remove('operations__content--active');
+//    });
+// }
+
+// function showContent(id) {
+//    document.querySelectorAll('.operations__content').forEach((e) => {
+//       if (Array.from(e.classList).join('').endsWith(id)) {
+//          e.classList.add('operations__content--active');
+//       }
+//    });
+// }
+
+// parent.addEventListener('click', function (e) {
+//    if (e.target.classList.contains('operations__tab')) {
+//       // Hide other active classes
+//       removeActiveClasses();
+//       // inject the active class
+//       const dataId = e.target.getAttribute('data-tab');
+//       e.target.classList.add('operations__tab--active');
+//       showContent(dataId);
+//    }
+// });
+
+// Tab component
+const parent = document.querySelector('.operations');
+const tabs = document.querySelectorAll('.operations__tab');
+const contents = document.querySelectorAll('.operations__content');
+
+function removeActiveClasses() {
+   tabs.forEach((tab) => tab.classList.remove('operations__tab--active'));
+   contents.forEach((content) =>
+      content.classList.remove('operations__content--active')
+   );
+}
+
+function showContent(id) {
+   document
+      .querySelector(`.operations__content--${id}`)
+      .classList.add('operations__content--active');
+}
+
+parent.addEventListener('click', function (e) {
+   const clickedTab = e.target.closest('.operations__tab');
+   if (clickedTab) {
+      // Hide other active classes
+      removeActiveClasses();
+
+      // Activate the clicked tab and corresponding content
+      const dataId = clickedTab.getAttribute('data-tab');
+      clickedTab.classList.add('operations__tab--active');
+      showContent(dataId);
+   }
+});
+
+// Hover effect
+const nav = document.querySelector('.nav');
+
+function manipulateOpacity(hide = true, e) {
+   const siblings = e.target.closest('.nav').querySelectorAll('.nav__link');
+
+   siblings.forEach((el) => {
+      if (hide) {
+         if (el !== e.target) {
+            el.style.opacity = 0.5;
+         }
+      } else {
+         el.style.opacity = 1;
+      }
+   });
+}
+
+nav.addEventListener('mouseover', function (e) {
+   if (e.target.classList.contains('nav__link')) {
+      manipulateOpacity(true, e);
+   }
+});
+
+nav.addEventListener('mouseout', function (e) {
+   manipulateOpacity(false, e);
+});
+
+// Sticky Navigation
+const initialCords = section1.getBoundingClientRect();
+
+// performance wise it is not good
+// window.addEventListener('scroll', function () {
+//    if (this.window.scrollY > initialCords.top) nav.classList.add('sticky');
+//    else nav.classList.remove('sticky');
+// });
+
+// Better approach: Intersection Observer
+// const observerCallback = function (entries, observer) {
+//    console.log(entries);
+// };
+// const observerOptions = {
+//    root: null, // if null then it refers the view port
+//    threshold: [0, 0.2], // target element visible and invisible from the view port then it will fire the callback
+// };
+
+// const observer = new IntersectionObserver(observerCallback, observerOptions);
+// observer.observe(section1);
+
+// // Sticky navigation - better approach
+// const stickyNav = function (entries) {
+//    const [entry] = entries;
+
+//    if (!entry.isIntersecting) nav.classList.add('sticky');
+//    else nav.classList.remove('sticky');
+// };
+// const headerObserver = new IntersectionObserver(stickyNav, {
+//    root: null,
+//    threshold: 0,
+// });
+// headerObserver.observe(header);
+
+const navHeight = nav.getBoundingClientRect().height;
+
+const stickyNav = (entries) => {
+   const [entry] = entries;
+   const { isIntersecting } = entry;
+
+   nav.classList.toggle('sticky', !isIntersecting);
+};
+
+const options = {
+   root: null,
+   threshold: 0,
+   rootMargin: `-${navHeight}px`, // creating a margin around the target element
+};
+
+const headerObserver = new IntersectionObserver(stickyNav, options);
+headerObserver.observe(header);
