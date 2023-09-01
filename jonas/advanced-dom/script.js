@@ -306,3 +306,55 @@ const options = {
 
 const headerObserver = new IntersectionObserver(stickyNav, options);
 headerObserver.observe(header);
+
+// Revealing elements while scrolling
+const allSections = document.querySelectorAll('.section');
+
+const revealSection = function (entries, observer) {
+   // entries.forEach((entry) => {
+   //    if (entry.isIntersecting) {
+   //       entry.target.classList.remove('section--hidden');
+   //    } else {
+   //       entry.target.classList.add('section--hidden');
+   //    }
+   // });
+   const [entry] = entries;
+   if (!entry.isIntersecting) return;
+   entry.target.classList.remove('section--hidden');
+   observer.unobserve(entry.target);
+};
+
+const sectionObserver = new IntersectionObserver(revealSection, {
+   root: null,
+   threshold: 0.15,
+});
+
+allSections.forEach((section) => {
+   sectionObserver.observe(section);
+   section.classList.add('section--hidden');
+});
+
+// lazy loading
+const allImages = document.querySelectorAll('img[data-src]');
+
+const revealImage = function (entries, observer) {
+   const [entry] = entries;
+
+   if (!entry.isIntersecting) return;
+
+   // const dataSrc = entry.target.getAttribute('data-src');
+   entry.target.src = entry.target.dataset.src;
+   // entry.target.classList.remove('lazy-img'); // we shouldn't do this as the image might take time to load
+   entry.target.addEventListener('load', () => {
+      entry.target.classList.remove('lazy-img');
+   });
+   observer.unobserve(entry.target);
+};
+const imgObserver = new IntersectionObserver(revealImage, {
+   root: null,
+   threshold: 0,
+   rootMargin: '-200px',
+});
+allImages.forEach((img) => {
+   imgObserver.observe(img);
+});
