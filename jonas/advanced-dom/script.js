@@ -358,3 +358,11 @@ const imgObserver = new IntersectionObserver(revealImage, {
 allImages.forEach((img) => {
    imgObserver.observe(img);
 });
+
+// console
+console.log('TASK 1');
+setTimeout(() => console.log('Timer 1'), 0);
+Promise.resolve('Hey there promise').then((res) => {
+   setTimeout(() => console.log(res), 2000);
+});
+console.log('TASK 2');
