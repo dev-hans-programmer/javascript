@@ -40,30 +40,30 @@ const memoizedClumsySqauare = (fn) => {
    };
 };
 
-const clumsySquare = (num1, num2) => {
-   for (let i = 1; i <= 10000000000; i++) {}
-   return num1 * num2;
-};
+// const clumsySquare = (num1, num2) => {
+//    for (let i = 1; i <= 10000000000; i++) {}
+//    return num1 * num2;
+// };
 
-console.time('First Call');
-const memoizedSqauare = memoizedClumsySqauare(clumsySquare);
-console.log(memoizedSqauare(2345, 4321));
-console.timeEnd('First Call');
+// console.time('First Call');
+// const memoizedSqauare = memoizedClumsySqauare(clumsySquare);
+// console.log(memoizedSqauare(2345, 4321));
+// console.timeEnd('First Call');
 
-console.time('Second Call');
-console.log(memoizedSqauare(2345, 4321));
-console.timeEnd('Second Call');
+// console.time('Second Call');
+// console.log(memoizedSqauare(2345, 4321));
+// console.timeEnd('Second Call');
 
 // Output based question on event loop
-console.log('a');
-setTimeout(() => console.log('Set'), 0);
-Promise.resolve(() => {
-   for (let i = 1; i <= 100000; i++) {}
-   console.log('pro');
-}).then((res) => {
-   console.log(res);
-});
-console.log('b');
+// console.log('a');
+// setTimeout(() => console.log('Set'), 0);
+// Promise.resolve(() => {
+//    for (let i = 1; i <= 100000; i++) {}
+//    console.log('pro');
+// }).then((res) => {
+//    console.log(res);
+// });
+// console.log('b');
 
 // Infinite currying
 
@@ -95,3 +95,18 @@ const calc = {
 
 const result = calc.add(10).multiply(5).subtract(30).add(10);
 console.log(result.total);
+
+var length = 4;
+
+function callback() {
+   console.log(this.length);
+}
+
+const objArg = {
+   length: 5,
+   method() {
+      console.log(arguments[0]());
+   },
+};
+
+objArg.method(callback, 2, 3);
