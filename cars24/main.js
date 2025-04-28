@@ -110,3 +110,16 @@ const objArg = {
 };
 
 objArg.method(callback, 2, 3);
+
+let counter = 0;
+
+function incrementCounter() {
+   setTimeout(() => {
+      counter++;
+      console.log(counter);
+   }, Math.random() * 1000);
+}
+
+incrementCounter();
+incrementCounter();
+incrementCounter();

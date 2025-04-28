@@ -23,9 +23,12 @@ class LURCache {
 }
 
 const lru = new LURCache();
-lru.set('name', 'Hasan');
+
 lru.set('age', '24');
 lru.set('hobby', 'singing');
 lru.set('address', 'Kolkata');
 lru.set('flat', '428');
 lru.set('occuption', 'Engg');
+lru.set('name', 'Hasan');
+console.log(lru.get('name'));
+console.log('object :>> ', lru);
