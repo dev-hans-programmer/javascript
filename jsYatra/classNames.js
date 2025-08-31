@@ -1,5 +1,6 @@
 // Implement classNames
 /**
+ * 
  * classNames('foo', 'bar'); // => 'foo bar'
 classNames('foo', { bar: true }); // => 'foo bar'
 classNames({ 'foo-bar': true }); // => 'foo-bar'

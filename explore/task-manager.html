@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Task Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .kanban-column {
+            min-height: 300px; /* Minimum height for columns */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .kanban-column.drag-over {
+            background-color: #e0e7ff; /* Light indigo when dragging over */
+        }
+        .task-card {
+            cursor: grab;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .task-card:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .task-card.dragging {
+            opacity: 0.5;
+        }
+        /* Confetti styles */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allow clicks to pass through */
+            overflow: hidden;
+            z-index: 9999;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00; /* Default red */
+            opacity: 0.7;
+            border-radius: 50%;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotateZ(0deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(110vh) rotateZ(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-4 sm:p-8">
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <div class="w-full max-w-4xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-800">Kanban Task Tracker</h1>
+        </header>
+
+        <div class="mb-8 p-6 bg-white rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add New Task</h2>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="taskInput" placeholder="Enter task description" class="flex-grow p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <button id="addTaskBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-sm transition duration-150 ease-in-out">
+                    Add Task
+                </button>
+            </div>
+            <p id="error-message" class="text-red-500 text-sm mt-2 hidden">Task description cannot be empty.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div id="todo" class="kanban-column bg-gray-100 p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-red-500 pb-2">To Do</h3>
+                <div id="todo-tasks" class="space-y-3 min-h-[200px]">
+                    </div>
+            </div>
+
+            <div id="inprogress" class="kanban-column bg-gray-100 p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-yellow-500 pb-2">In Progress</h3>
+                <div id="inprogress-tasks" class="space-y-3 min-h-[200px]">
+                    </div>
+            </div>
+
+            <div id="done" class="kanban-column bg-gray-100 p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-green-500 pb-2">Done</h3>
+                <div id="done-tasks" class="space-y-3 min-h-[200px]">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskInput = document.getElementById('taskInput');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const errorMessage = document.getElementById('error-message');
+        const columns = {
+            todo: document.getElementById('todo-tasks'),
+            inprogress: document.getElementById('inprogress-tasks'),
+            done: document.getElementById('done-tasks')
+        };
+        const columnElements = document.querySelectorAll('.kanban-column');
+        const confettiContainer = document.getElementById('confettiContainer');
+
+        let tasks = JSON.parse(localStorage.getItem('kanbanTasks')) || { todo: [], inprogress: [], done: [] };
+        let draggedTask = null; // To store the task being dragged
+
+        // --- Task Creation ---
+        function createTaskElement(task) {
+            const taskCard = document.createElement('div');
+            taskCard.classList.add('task-card', 'bg-white', 'p-3', 'rounded-md', 'shadow-sm', 'hover:shadow-md');
+            taskCard.textContent = task.text;
+            taskCard.draggable = true;
+            taskCard.dataset.id = task.id; // Store task ID
+            taskCard.dataset.status = task.status; // Store task status
+
+            // Drag event listeners for the task card
+            taskCard.addEventListener('dragstart', (e) => {
+                draggedTask = taskCard;
+                e.dataTransfer.setData('text/plain', task.id);
+                setTimeout(() => taskCard.classList.add('dragging'), 0); // Add class for visual feedback
+            });
+
+            taskCard.addEventListener('dragend', () => {
+                draggedTask.classList.remove('dragging');
+                draggedTask = null;
+            });
+            
+            // Add delete button to task card
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '&times;'; // "x" symbol for delete
+            deleteButton.classList.add('float-right', 'text-gray-400', 'hover:text-red-500', 'font-bold', 'ml-2', 'text-lg');
+            deleteButton.title = "Delete task";
+            deleteButton.onclick = (event) => {
+                event.stopPropagation(); // Prevent dragstart or other parent events
+                deleteTask(task.id, task.status);
+            };
+            taskCard.appendChild(deleteButton);
+
+
+            return taskCard;
+        }
+        
+        function deleteTask(taskId, status) {
+            // Remove from tasks object
+            tasks[status] = tasks[status].filter(t => t.id !== taskId);
+            
+            // Remove from DOM
+            const taskElement = document.querySelector(`.task-card[data-id='${taskId}']`);
+            if (taskElement) {
+                taskElement.remove();
+            }
+            
+            saveTasks();
+        }
+
+
+        // --- Add Task Functionality ---
+        addTaskBtn.addEventListener('click', () => {
+            const taskText = taskInput.value.trim();
+            if (taskText === '') {
+                errorMessage.classList.remove('hidden');
+                taskInput.focus();
+                return;
+            }
+            errorMessage.classList.add('hidden');
+
+            const newTask = {
+                id: `task-${Date.now()}`, // Unique ID for the task
+                text: taskText,
+                status: 'todo' // Default status
+            };
+
+            tasks.todo.push(newTask);
+            const taskElement = createTaskElement(newTask);
+            columns.todo.appendChild(taskElement);
+            taskInput.value = ''; // Clear input field
+            saveTasks();
+        });
+        
+        // Allow pressing Enter to add task
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTaskBtn.click();
+            }
+        });
+
+
+        // --- Drag and Drop Functionality ---
+        columnElements.forEach(columnDiv => {
+            const taskContainer = columnDiv.querySelector('.space-y-3'); // e.g., #todo-tasks
+            
+            taskContainer.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessary to allow dropping
+                columnDiv.classList.add('drag-over');
+            });
+
+            taskContainer.addEventListener('dragleave', () => {
+                columnDiv.classList.remove('drag-over');
+            });
+
+            taskContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                columnDiv.classList.remove('drag-over');
+                if (!draggedTask) return;
+
+                const targetColumnId = columnDiv.id; // 'todo', 'inprogress', 'done'
+                const taskId = draggedTask.dataset.id;
+                const oldStatus = draggedTask.dataset.status;
+
+                if (targetColumnId !== oldStatus) { // Only update if status changes
+                    // Update task status in the tasks object
+                    const taskIndex = tasks[oldStatus].findIndex(t => t.id === taskId);
+                    if (taskIndex > -1) {
+                        const taskToMove = tasks[oldStatus].splice(taskIndex, 1)[0];
+                        taskToMove.status = targetColumnId;
+                        tasks[targetColumnId].push(taskToMove);
+                        draggedTask.dataset.status = targetColumnId; // Update status on the element
+                        saveTasks();
+
+                        // Trigger confetti if moved to "Done"
+                        if (targetColumnId === 'done') {
+                            triggerConfetti();
+                        }
+                    }
+                }
+                taskContainer.appendChild(draggedTask); // Append to the new column's task list
+            });
+        });
+
+        // --- Confetti Animation ---
+        function triggerConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+            for (let i = 0; i < 100; i++) { // Create 100 confetti pieces
+                const confettiPiece = document.createElement('div');
+                confettiPiece.classList.add('confetti');
+                confettiPiece.style.left = Math.random() * 100 + 'vw'; // Random horizontal start
+                confettiPiece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confettiPiece.style.animationDelay = Math.random() * 0.5 + 's'; // Random delay for staggered fall
+                confettiPiece.style.width = (Math.random() * 8 + 6) + 'px'; // Random size 6-14px
+                confettiPiece.style.height = confettiPiece.style.width;
+                confettiPiece.style.opacity = Math.random() * 0.5 + 0.5; // Random opacity 0.5-1.0
+
+                confettiContainer.appendChild(confettiPiece);
+
+                // Remove confetti piece after animation
+                setTimeout(() => {
+                    confettiPiece.remove();
+                }, 3500); // A bit longer than animation duration
+            }
+        }
+
+        // --- Local Storage ---
+        function saveTasks() {
+            localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            Object.keys(tasks).forEach(status => {
+                tasks[status].forEach(task => {
+                    const taskElement = createTaskElement(task);
+                    columns[status].appendChild(taskElement);
+                });
+            });
+        }
+
+        // --- Initialize ---
+        // Load tasks from local storage when the page loads
+        document.addEventListener('DOMContentLoaded', loadTasks);
+
+    </script>
+</body>
+</html>
